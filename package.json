@@ -1,0 +1,41 @@
+{
+    "name": "lunjack-env",
+    "version": "2.0.0",
+    "description": "A simple package to read .env environment files",
+    "types": "index.d.ts",
+    "main": "index.js",
+    "scripts": {
+        "install": "node install.js",
+        "postinstall": "node install.js 2>&1",
+        "test": "echo \"Test completed\" && exit 0"
+    },
+    "bin": {
+        "env-init": "./install.js"
+    },
+    "files": [
+        "index.js",
+        "install.js",
+        "env.js"
+    ],
+    "keywords": [
+        "env",
+        "environment",
+        "variables",
+        "config",
+        "lunjack"
+    ],
+    "author": "lunjack <china@lunjack.com>",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/lunjack/lunjack_ENV.git"
+    },
+    "homepage": "https://www.npmjs.com/package/lunjack-env#readme",
+    "bugs": {
+        "url": "https://github.com/lunjack/lunjack_ENV/issues"
+    },
+    "license": "ISC",
+    "engines": {
+        "node": ">=10.0.0"
+    },
+    "type": "commonjs"
+}
