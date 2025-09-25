@@ -75,10 +75,6 @@ console.log('所有变量:', allVars);
 ### 带配置的使用
 
 ```javascript
-const envLoader = require('lunjack-env');
-// 注意：直接 require 返回的是代理实例
-// 如需配置，需要这样使用：
-
 const { envLoader } = require('lunjack-env');
 const env = new envLoader({
   path: '/custom/path/.env', // 自定义文件路径
