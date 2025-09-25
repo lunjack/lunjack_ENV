@@ -18,6 +18,9 @@ const exampleLines = [
     'APP_NAME = MyApp',
     '',
     'NODE_ENV = development',
-    ''
+    '',
+    `# 调用包: const env = require('lunjack-env');`,
+    '',
+    '# 使用格式: env.变量名'
 ];
 module.exports = { exampleLines };
