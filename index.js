@@ -56,7 +56,7 @@ class envLoader {
     // 查找 .env 文件
     findEnvFile() {
         const possiblePaths = [
-            this.options.path,                      // 1. 用户自定义路径
+            this.options.path,                      // 1. 自定义路径
             path.join(process.cwd(), this.options.path), // 2. 当前工作目录下的自定义路径
             path.join(process.cwd(), '.env'),       // 3. 当前工作目录下的默认 .env 文件
             path.join(os.homedir(), '.env')         // 4. C盘用户主目录下的 .env 文件
