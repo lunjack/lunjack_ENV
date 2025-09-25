@@ -3,6 +3,7 @@
     "version": "2.0.4",
     "description": "A simple package to read .env environment files",
     "main": "index.js",
+    "types": "index.d.ts",
     "scripts": {
         "install": "node install.js",
         "postinstall": "node install.js 2>&1",
