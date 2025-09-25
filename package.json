@@ -15,7 +15,8 @@
     "files": [
         "index.js",
         "install.js",
-        "env.js"
+        "env.js",
+        "index.d.ts"
     ],
     "keywords": [
         "env",
