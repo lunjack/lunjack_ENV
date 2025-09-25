@@ -56,10 +56,10 @@ class envLoader {
     // 查找 .env 文件
     findEnvFile() {
         const possiblePaths = [
-            this.options.path,
-            path.join(process.cwd(), this.options.path),
-            path.join(process.cwd(), '.env'),
-            path.join(os.homedir(), '.env')
+            this.options.path, // 自定义路径
+            path.join(process.cwd(), this.options.path), // 当前工作目录+自定义
+            path.join(process.cwd(), '.env'), // 当前工作目录的 .env 文件
+            path.join(os.homedir(), '.env') // C盘用户主目录的 .env 文件
         ];
 
         for (const filePath of possiblePaths) {
