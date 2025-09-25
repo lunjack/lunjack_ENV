@@ -1,6 +1,6 @@
 {
     "name": "lunjack-env",
-    "version": "2.0.5",
+    "version": "2.0.6",
     "description": "A simple package to read .env environment files",
     "main": "index.js",
     "types": "index.d.ts",
