@@ -77,7 +77,7 @@ console.log('所有变量:', allVars);
 // 自定义路径(示例):
 const { config } = require('lunjack-env');
 const env = config({
-    path: './path/.env',  // 自定义路径
+    path: './path/.env',  // 自定义路径 (自定义路径如果是相对路径,那么请以工作路径作为基准设置->向上或向下或同级)
     encoding: 'utf8',     // 字符集 (默认utf8)
     debug: true           // 调试模式 (默认false)
 });
