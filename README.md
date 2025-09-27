@@ -44,16 +44,15 @@ NODE_ENV=development
 
 ## 文件查找顺序
 1. 自定义路径
-2. 当前工作目录下的自定义路径
-3. 当前工作目录的 `.env` 文件
-4. C盘用户主目录的 `.env` 文件
+2. 当前工作目录的 `.env` 文件
+3. C盘用户主目录的 `.env` 文件
 
 ## 使用方法
 
 ### 示例
 
 ```javascript
-const env = require('lunjack-env');
+const {env} = require('lunjack-env');
 
 // 直接使用变量
 console.log(env.DATABASE_URL);
@@ -75,12 +74,15 @@ console.log('所有变量:', allVars);
 ### 带配置的使用
 
 ```javascript
-const { envLoader } = require('lunjack-env');
-const env = new envLoader({
-  path: '/custom/path/.env', // 自定义文件路径
-  debug: true,               // 启用调试模式 (默认false)
-  encoding: 'utf8'           // 文件编码 (默认utf8)
+// 自定义路径(示例):
+const { config } = require('lunjack-env');
+const env = config({
+    path: './path/.env',  // 自定义路径
+    encoding: 'utf8',     // 字符集 (默认utf8)
+    debug: true           // 调试模式 (默认false)
 });
+
+console.log(env.PORT); // 访问配置项
 ```
 
 ## 错误处理

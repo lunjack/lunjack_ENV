@@ -16,7 +16,8 @@
         "index.js",
         "install.js",
         "env.js",
-        "index.d.ts"
+        "index.d.ts",
+        "CHANGELOG.md"
     ],
     "keywords": [
         "env",

@@ -3,19 +3,27 @@ const path = require('path');
 const os = require('os');
 const { exampleLines } = require('./env');
 
-class envLoader {
+class EnvLoader {
     constructor(options = {}) {
-        this.options = {
-            path: options.path || '.env',
-            encoding: options.encoding || 'utf8',
-            debug: options.debug || false,
-            ...options
-        };
-
+        this.options = { ...options };
         this.variables = {};
         this.loaded = false;
 
         this.load(); // 自动加载
+
+        // 返回代理实例以实现 env.变量名 的访问方式
+        return new Proxy(this, {
+            get: (target, prop) => {
+                if (prop in target) return target[prop];
+                const variables = target.getAll();
+                if (prop in variables) return variables[prop];
+                return undefined;
+            },
+            set(target, prop, value) {
+                console.warn('⚠️  警告: 环境变量应在 .env 文件中设置');
+                return false;
+            }
+        });
     }
 
     // 解析 .env 文件内容
@@ -53,35 +61,53 @@ class envLoader {
         return result;
     }
 
-    // 查找 .env 文件
-    findEnvFile() {
+    // 查找文件
+    findFile(defaultFileName, customPath) {
+        let createPath; // 首选创建路径
+
+        // 1. 如果有传入自定义路径
+        if (customPath && customPath !== '.env') {
+            createPath = path.isAbsolute(customPath) ? customPath : path.resolve(process.cwd(), customPath);
+
+            // 检查自定义路径的文件是否存在
+            try {
+                if (fs.statSync(createPath).isFile()) return { found: true, path: createPath, createPath };
+            } catch (error) { }
+
+            // 自定义路径的文件不存在，返回创建路径为自定义路径
+            return { found: false, path: null, createPath };
+        }
+
+        // 2. 没有自定义路径，检查默认路径
         const possiblePaths = [
-            this.options.path,                      // 1. 自定义路径
-            path.join(process.cwd(), this.options.path), // 2. 当前工作目录下的自定义路径
-            path.join(process.cwd(), '.env'),       // 3. 当前工作目录下的默认 .env 文件
-            path.join(os.homedir(), '.env')         // 4. C盘用户主目录下的 .env 文件
+            path.join(process.cwd(), defaultFileName), // 当前工作目录
+            path.join(os.homedir(), defaultFileName) // 系统用户主目录
         ];
 
+        // 检查每个路径是否存在
         for (const filePath of possiblePaths) {
             try {
-                if (fs.existsSync(filePath)) return filePath;
+                if (fs.statSync(filePath).isFile()) return { found: true, path: filePath, createPath: filePath };
             } catch (error) { }
         }
 
-        return null;
+        // 3. 所有路径都不存在，返回创建路径为当前工作目录
+        createPath = path.join(process.cwd(), defaultFileName);
+        return { found: false, path: null, createPath };
     }
 
     // 创建示例文件
-    createExampleFile(filePath) {
+    createExampleFile(filePath, exampleContent) {
         try {
-            // 处理示例内容
-            const formattedContent = exampleLines.join('\n');
+            // 确保目录存在
+            const dir = path.dirname(filePath);
+            if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
-            fs.writeFileSync(filePath, formattedContent, 'utf8');
-            console.log('✓ 已创建 .env 示例文件: ' + filePath + ';请编辑环境变量后重新运行程序');
+            fs.writeFileSync(filePath, exampleContent, 'utf8');
+            console.log('✓ 已创建示例文件: ' + filePath + ';请编辑环境变量后重新运行程序');
             process.exit(1);
         } catch (error) {
-            console.error('✗ 创建 .env 文件失败:', error.message);
+            console.error('✗ 创建示例文件失败:', error.message);
         }
     }
 
@@ -89,29 +115,28 @@ class envLoader {
     load() {
         if (this.loaded) return this.variables;
 
-        const envFilePath = this.findEnvFile();
+        const result = this.findFile('.env', this.options.path);
 
-        if (!envFilePath) {
+        if (!result.found) {
             console.error('❌ 错误: 未找到 .env 文件');
             console.log('💡 正在创建示例文件...');
 
-            const defaultPath = path.join(process.cwd(), '.env');
-            this.createExampleFile(defaultPath);
+            // 创建示例文件
+            this.createExampleFile(result.createPath, exampleLines.join('\n'));
+            return this.variables;
         }
 
         try {
-            const content = fs.readFileSync(envFilePath, this.options.encoding);
+            // 读取并解析文件
+            const content = fs.readFileSync(result.path, this.options.encoding);
             this.variables = this.parse(content);
             this.loaded = true;
 
-            if (this.options.debug) {
-                console.log(`✓ 成功加载 .env 文件: ${envFilePath}`);
-                console.log(`✓ 加载了 ${Object.keys(this.variables).length} 个变量`);
-            }
+            if (this.options.debug) console.log(`✓ 加载了 ${Object.keys(this.variables).length} 个变量`);
 
             // 将变量设置到 process.env
             for (const [key, value] of Object.entries(this.variables)) {
-                if (!process.env[key]) process.env[key] = value;
+                process.env[key] = value;
             }
 
         } catch (error) {
@@ -138,27 +163,35 @@ class envLoader {
     }
 }
 
-// 创建单例实例
-const envInstance = new envLoader();
+// 延迟创建默认实例
+let _defaultEnv = null;
 
-// 代理处理器，实现 env.变量名 的调用方式
-const handler = {
-    get(target, prop) {
-        if (prop in target) return target[prop];
+// 获取默认实例的函数
+function getDefaultEnv() {
+    if (!_defaultEnv) _defaultEnv = new EnvLoader({
+        path: '.env',
+        encoding: 'utf8',
+        debug: false
+    });
+    return _defaultEnv;
+}
 
-        // 如果属性不存在于 envLoader 实例，尝试从变量中获取
-        const variables = target.getAll();
-        if (prop in variables) return variables[prop];
-
-        return undefined;
+// 导出对象
+module.exports = {
+    // 默认的环境变量实例，通过 getter 延迟创建
+    get env() {
+        return getDefaultEnv();
     },
 
-    set(target, prop, value) {
-        console.warn('⚠️  警告: 不能直接设置 env 变量，请编辑 .env 文件');
-        return false;
+    // 配置加载器函数
+    config: (options = {}) => {
+        // 如果传入的是字符串，则视为路径
+        if (typeof options === 'string') options = { path: options };
+
+        return new EnvLoader({
+            path: options.path || '.env',
+            encoding: options.encoding || 'utf8',
+            debug: options.debug || false
+        });
     }
 };
-
-// 创建代理实例
-const env = new Proxy(envInstance, handler);
-module.exports = env;
